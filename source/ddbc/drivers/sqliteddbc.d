@@ -52,9 +52,9 @@ version(USE_SQLITE) {
 
     version(unittest) {
         /*
-            To allow unit tests using PostgreSQL server,
+            To allow unit tests using SQLite server,
          */
-        /// change to false to disable tests on real PostgreSQL server
+        /// change to false to disable tests on real SQLite server
         immutable bool SQLITE_TESTS_ENABLED = true;
         /// change parameters if necessary
         const string SQLITE_UNITTEST_FILENAME = "ddbctest.sqlite";
@@ -642,7 +642,7 @@ version(USE_SQLITE) {
             this.rs = rs;
             this.metadata = metadata;
             closed = false;
-            this.columnCount = sqlite3_data_count(rs); //metadata.getColumnCount();
+            this.columnCount = sqlite3_column_count(rs); //metadata.getColumnCount();
             for (int i=0; i<columnCount; i++) {
                 columnMap[metadata.getColumnName(i + 1)] = i;
             }
@@ -1000,6 +1000,21 @@ version(USE_SQLITE) {
                     long id = rs.getLong(1);
                     string name = rs.getString(2);
                     assert(rs.isNull(3));
+                    //writeln("" ~ to!string(id) ~ "\t" ~ name);
+                }
+            }
+            {
+                //writeln("reading table");
+                Statement stmt = conn.createStatement();
+                scope(exit) stmt.close();
+                ResultSet rs = stmt.executeQuery("SELECT id, name, flags FROM t1");
+                scope(exit) rs.close();
+                //writeln("id" ~ "\t" ~ "name");
+                while (rs.next()) {
+                    long id = rs.getLong("id");
+                    string name = rs.getString("name");
+                    int flags = rs.getInt("flags");
+                    assert(rs.wasNull());
                     //writeln("" ~ to!string(id) ~ "\t" ~ name);
                 }
             }
